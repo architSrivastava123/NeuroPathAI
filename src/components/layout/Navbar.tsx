@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  Sparkles, 
+  BrainCircuit, 
   LayoutDashboard, 
   Map, 
   Network, 
@@ -32,15 +32,15 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-indigo-600 shadow-lg shadow-teal-500/20 group-hover:scale-105 transition-transform">
-              <Sparkles className="h-5 w-5 text-slate-950" />
+          <Link href="/dashboard" className="flex items-center gap-2.5 group shrink-0">
+            <div className="flex h-10 w-10 min-w-[40px] min-h-[40px] aspect-square shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-indigo-600 shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
+              <BrainCircuit className="h-5 w-5 text-slate-950 stroke-[2.2]" />
             </div>
-            <div>
-              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-teal-300 via-cyan-200 to-indigo-300 bg-clip-text text-transparent">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <span className="text-lg font-black tracking-tight bg-gradient-to-r from-teal-300 via-cyan-200 to-indigo-300 bg-clip-text text-transparent leading-none">
                 NeuroPath AI
               </span>
-              <span className="hidden sm:inline-block ml-2 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">
+              <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20 whitespace-nowrap">
                 Learning Intelligence
               </span>
             </div>
