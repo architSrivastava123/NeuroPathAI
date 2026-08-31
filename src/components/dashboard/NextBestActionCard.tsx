@@ -24,7 +24,8 @@ export default function NextBestActionCard({ action }: { action: NextBestAction 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-3 max-w-2xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500 text-slate-950 text-xs font-black tracking-wide uppercase shadow-sm">
+            <span className="relative flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500 text-slate-950 text-xs font-black tracking-wide uppercase shadow-md shadow-teal-500/30">
+              <span className="animate-ping absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-teal-300 opacity-75"></span>
               <Zap className="h-3.5 w-3.5 fill-slate-950" />
               Next Best Action
             </span>
