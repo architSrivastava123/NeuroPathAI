@@ -284,4 +284,35 @@ export class LearnerTwinService {
 
     return { updatedTwin, affectedSkills: skillIds };
   }
+
+  /**
+   * Recalculates dynamic learning velocity & streak momentum from recent activities.
+   */
+  static calculateLearningMomentum(twin: LearnerDigitalTwin): {
+    velocityRating: "AHEAD_OF_SCHEDULE" | "ON_TRACK" | "NEEDS_BOOST";
+    projectedCompletionWeeks: number;
+    consistencyGrade: string;
+  } {
+    const velocity = twin.learningVelocity || 1.0;
+    const consistency = twin.consistencyScore || 0.85;
+
+    let velocityRating: "AHEAD_OF_SCHEDULE" | "ON_TRACK" | "NEEDS_BOOST" = "ON_TRACK";
+    if (velocity >= 1.25) velocityRating = "AHEAD_OF_SCHEDULE";
+    else if (velocity < 0.85) velocityRating = "NEEDS_BOOST";
+
+    const baseWeeks = twin.targetDeadlineWeeks || 24;
+    const projectedCompletionWeeks = Math.max(4, Math.round(baseWeeks / velocity));
+
+    let consistencyGrade = "A";
+    if (consistency >= 0.9) consistencyGrade = "A+";
+    else if (consistency >= 0.75) consistencyGrade = "A";
+    else if (consistency >= 0.6) consistencyGrade = "B";
+    else consistencyGrade = "C";
+
+    return {
+      velocityRating,
+      projectedCompletionWeeks,
+      consistencyGrade,
+    };
+  }
 }
