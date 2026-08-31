@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, X, Send, Sparkles, HelpCircle, FastForward, Clock, Lightbulb } from "lucide-react";
+import { Bot, X, Send, Sparkles, Trash2, Copy, Check, Terminal, Compass, BookOpen, Clock } from "lucide-react";
 
 export default function LearningCopilot({ pageContext = "dashboard" }: { pageContext?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
+  const [copied, setCopied] = useState(false);
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string; timestamp?: string }>>([
     {
       role: "assistant",
       content: "Hi Alex! I'm your AI Learning Copilot. I continuously track your skill graph and learning velocity. Ask me why anything is recommended, test your knowledge, or ask me to recalibrate your schedule!",
+      timestamp: "Just now",
     },
   ]);
 
   const quickPrompts = [
     { label: "Why this topic?", query: "Why am I learning my current active module?" },
-    { label: "Can I skip ahead?", query: "Can I skip this and jump to RAG or Agents?" },
-    { label: "Test my mastery", query: "Give me an interactive diagnostic quiz right now." },
+    { label: "Prerequisite check", query: "What are the exact prerequisites before I can start RAG Architecture?" },
+    { label: "Can I skip ahead?", query: "Can I skip this and jump directly to AI Agents?" },
+    { label: "Test my mastery", query: "Give me an interactive diagnostic quiz right now on Python and ML." },
     { label: "Fix my schedule", query: "I have 5 extra hours this week. Rebalance my roadmap." },
   ];
 
@@ -25,7 +28,8 @@ export default function LearningCopilot({ pageContext = "dashboard" }: { pageCon
     const query = textToSend || input;
     if (!query.trim() || loading) return;
 
-    const newMessages = [...messages, { role: "user" as const, content: query }];
+    const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const newMessages = [...messages, { role: "user" as const, content: query, timestamp: timeStr }];
     setMessages(newMessages);
     setInput("");
     setLoading(true);
@@ -43,7 +47,14 @@ export default function LearningCopilot({ pageContext = "dashboard" }: { pageCon
 
       const data = await res.json();
       if (data.reply) {
-        setMessages([...newMessages, { role: "assistant", content: data.reply }]);
+        setMessages([
+          ...newMessages,
+          {
+            role: "assistant",
+            content: data.reply,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
+        ]);
       }
     } catch {
       setMessages([
@@ -51,11 +62,31 @@ export default function LearningCopilot({ pageContext = "dashboard" }: { pageCon
         {
           role: "assistant",
           content: "I'm having trouble connecting right now, but your roadmap is fully synchronized!",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCopyHistory = () => {
+    const transcript = messages
+      .map((m) => `[${m.role.toUpperCase()} - ${m.timestamp || ""}]:\n${m.content}\n`)
+      .join("\n");
+    navigator.clipboard.writeText(transcript);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleClearHistory = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content: "Conversation history cleared. Ready for your next learning question!",
+        timestamp: "Just now",
+      },
+    ]);
   };
 
   return (
@@ -77,7 +108,7 @@ export default function LearningCopilot({ pageContext = "dashboard" }: { pageCon
 
       {/* Floating Dialog */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-2rem)] h-[520px] rounded-2xl glass-panel-glow flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-2rem)] h-[540px] rounded-2xl glass-panel-glow flex flex-col shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900/90">
             <div className="flex items-center gap-2">
@@ -89,16 +120,32 @@ export default function LearningCopilot({ pageContext = "dashboard" }: { pageCon
                 <p className="text-[10px] text-teal-400 font-medium">Context: {pageContext}</p>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleCopyHistory}
+                title="Copy conversation"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-teal-400" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+              <button
+                onClick={handleClearHistory}
+                title="Clear chat"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors ml-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+          <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs scrollbar-thin">
             {messages.map((m, i) => (
               <div
                 key={i}
@@ -110,13 +157,22 @@ export default function LearningCopilot({ pageContext = "dashboard" }: { pageCon
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-xl p-3 leading-relaxed ${
+                  className={`max-w-[82%] rounded-xl p-3 leading-relaxed flex flex-col gap-1 ${
                     m.role === "user"
                       ? "bg-indigo-600 text-white rounded-br-none"
                       : "bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none shadow-sm"
                   }`}
                 >
-                  {m.content}
+                  <div className="whitespace-pre-wrap">{m.content}</div>
+                  {m.timestamp && (
+                    <span
+                      className={`text-[9px] self-end opacity-60 ${
+                        m.role === "user" ? "text-indigo-200" : "text-slate-400"
+                      }`}
+                    >
+                      {m.timestamp}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -129,12 +185,12 @@ export default function LearningCopilot({ pageContext = "dashboard" }: { pageCon
           </div>
 
           {/* Quick Prompts */}
-          <div className="px-3 py-2 border-t border-slate-800/80 bg-slate-950/60 flex gap-1.5 overflow-x-auto">
+          <div className="px-3 py-2 border-t border-slate-800/80 bg-slate-950/60 flex gap-1.5 overflow-x-auto scrollbar-none">
             {quickPrompts.map((qp, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(qp.query)}
-                className="shrink-0 text-[10px] px-2 py-1 rounded-md bg-slate-800/80 hover:bg-teal-500/20 text-slate-300 hover:text-teal-300 border border-slate-700/60 transition-colors"
+                className="shrink-0 text-[10px] px-2.5 py-1 rounded-md bg-slate-800/80 hover:bg-teal-500/20 text-slate-300 hover:text-teal-300 border border-slate-700/60 transition-colors"
               >
                 {qp.label}
               </button>
