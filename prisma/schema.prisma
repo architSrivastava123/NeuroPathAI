@@ -1,0 +1,393 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  name          String
+  avatarUrl     String?
+  role          String          @default("LEARNER") // LEARNER, ADMIN, MENTOR
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  profile       LearnerProfile?
+  conversations Conversation[]
+  feedbacks     RecommendationFeedback[]
+  sessions      LearningSession[]
+  auditLogs     AuditLog[]
+}
+
+model LearnerProfile {
+  id                     String            @id @default(uuid())
+  userId                 String            @unique
+  user                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  targetRole             String            @default("AI Engineer")
+  targetDeadlineWeeks    Int               @default(24)
+  availableHoursPerWeek  Int               @default(10)
+  learningStrategy       String            @default("BALANCED") // FAST_TRACK, BALANCED, PROJECT_FIRST, INTERVIEW_FIRST, DEEP_MASTERY
+  preferredFormats       String            @default("[\"PROJECTS\",\"INTERACTIVE\",\"VIDEO\",\"DOCUMENTATION\"]") // JSON string array
+  learningVelocity       Float             @default(1.0) // 1.0 = nominal, >1.0 = fast, <1.0 = needs more time
+  consistencyScore       Float             @default(0.85) // 0 to 1.0
+  currentRoadmapId       String?
+  
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  goals                  Goal[]
+  skills                 LearnerSkill[]
+  learningPaths          LearningPath[]
+  assessmentAttempts     AssessmentAttempt[]
+  projectSubmissions     ProjectSubmission[]
+  notifications          Notification[]
+}
+
+model Goal {
+  id                     String            @id @default(uuid())
+  profileId              String
+  profile                LearnerProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  title                  String
+  rawPrompt              String
+  normalizedRole         String
+  targetProficiency      Float             @default(80.0) // percentage
+  deadline               DateTime?
+  status                 String            @default("ACTIVE") // ACTIVE, COMPLETED, PAUSED
+  decomposedObjectives   String            // JSON serialized breakdown
+  
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+}
+
+model Skill {
+  id                     String            @id
+  name                   String
+  slug                   String            @unique
+  description            String
+  category               String            // "AI / ML", "Software Engineering", "Data & Cloud", "Foundations"
+  difficulty             String            // "BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"
+  importanceWeight       Float             @default(1.0) // 0.1 to 2.0
+  parentSkillId          String?
+  parentSkill            Skill?            @relation("SkillHierarchy", fields: [parentSkillId], references: [id])
+  childSkills            Skill[]           @relation("SkillHierarchy")
+  
+  estimatedHoursToMaster Int               @default(20)
+  embedding              String?           // Vector embedding stored as JSON array of floats
+
+  prerequisites          SkillDependency[] @relation("DependentSkills")
+  dependents             SkillDependency[] @relation("PrerequisiteSkills")
+
+  resourceSkills         ResourceSkill[]
+  projects               ProjectSkill[]
+  questions              Question[]
+  learnerSkills          LearnerSkill[]
+  pathSteps              LearningPathStep[]
+}
+
+model SkillDependency {
+  id                     String            @id @default(uuid())
+  skillId                String
+  prerequisiteId         String
+  dependencyType         String            @default("HARD") // "HARD", "SOFT", "RECOMMENDED"
+  requiredLevel          Float             @default(60.0) // Mastery % required before taking target skill
+
+  skill                  Skill             @relation("DependentSkills", fields: [skillId], references: [id], onDelete: Cascade)
+  prerequisite           Skill             @relation("PrerequisiteSkills", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, prerequisiteId])
+}
+
+model LearnerSkill {
+  id                     String            @id @default(uuid())
+  profileId              String
+  skillId                String
+  
+  estimatedMastery       Float             @default(0.0) // 0.0 to 100.0%
+  confidenceScore        Float             @default(0.5) // 0.0 to 1.0
+  status                 String            @default("LOCKED") // "LOCKED", "AVAILABLE", "IN_PROGRESS", "COMPLETED", "MASTERED"
+  
+  selfReportedLevel      Float?
+  courseEvidenceScore    Float?
+  assessmentScore        Float?
+  projectEvidenceScore   Float?
+  lastEvaluatedAt        DateTime          @default(now())
+  decayFactor            Float             @default(1.0)
+  
+  profile                LearnerProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  skill                  Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  evidenceLogs           SkillEvidence[]
+
+  @@unique([profileId, skillId])
+}
+
+model SkillEvidence {
+  id                     String            @id @default(uuid())
+  learnerSkillId         String
+  learnerSkill           LearnerSkill      @relation(fields: [learnerSkillId], references: [id], onDelete: Cascade)
+  
+  sourceType             String            // "SELF_REPORT", "COURSE_COMPLETION", "ASSESSMENT", "PROJECT_EVAL", "INTERACTION"
+  score                  Float             // 0 to 100
+  weight                 Float             // e.g. 0.6 for self-report, 0.88 for assessment, 0.82 for project
+  metadata               String?           // JSON details
+  createdAt              DateTime          @default(now())
+}
+
+model LearningResource {
+  id                     String            @id @default(uuid())
+  title                  String
+  slug                   String            @unique
+  description            String
+  provider               String            // "DeepLearning.AI", "Coursera", "Fast.ai", "Official Docs", "Hugging Face", "YouTube", etc.
+  url                    String
+  type                   String            // "COURSE", "VIDEO", "INTERACTIVE", "DOCUMENTATION", "BOOK", "TUTORIAL", "EXERCISE"
+  difficulty             String            // "BEGINNER", "INTERMEDIATE", "ADVANCED"
+  durationMinutes        Int
+  qualityScore           Float             @default(4.8) // 0 to 5.0
+  cost                   String            @default("FREE") // "FREE", "PAID", "FREEMIUM"
+  format                 String            @default("INTERACTIVE")
+  summary                String?
+  embedding              String?           // JSON float vector for RAG
+  
+  skills                 ResourceSkill[]
+  feedbacks              RecommendationFeedback[]
+  pathSteps              LearningPathStep[]
+}
+
+model ResourceSkill {
+  id                     String            @id @default(uuid())
+  resourceId             String
+  skillId                String
+  coverageLevel          Float             @default(80.0) // % coverage of skill
+  isPrimary              Boolean           @default(true)
+
+  resource               LearningResource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  skill                  Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, skillId])
+}
+
+model Project {
+  id                     String            @id @default(uuid())
+  title                  String
+  slug                   String            @unique
+  description            String
+  scenario               String
+  difficulty             String            // "BEGINNER", "INTERMEDIATE", "ADVANCED", "CAPSTONE"
+  estimatedHours         Int               @default(12)
+  rubric                 String            // JSON { architecture, codeQuality, testing, security, documentation }
+  starterTemplateUrl     String?
+  deliverableCriteria    String            // JSON list of required deliverables
+  hints                  String?           // JSON list of progressive hints
+
+  skills                 ProjectSkill[]
+  submissions            ProjectSubmission[]
+  pathSteps              LearningPathStep[]
+}
+
+model ProjectSkill {
+  id                     String            @id @default(uuid())
+  projectId              String
+  skillId                String
+  importance             Float             @default(1.0)
+
+  project                Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill                  Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, skillId])
+}
+
+model ProjectSubmission {
+  id                     String            @id @default(uuid())
+  profileId              String
+  projectId              String
+  repoUrl                String?
+  liveUrl                String?
+  submittedCode          String?
+  description            String
+  
+  status                 String            @default("SUBMITTED") // "SUBMITTED", "EVALUATING", "GRADED", "REJECTED"
+  overallScore           Float?            // 0 to 100
+  rubricScores           String?           // JSON breakdown { architecture: 85, codeQuality: 78, testing: 70, security: 80, documentation: 90 }
+  aiFeedback             String?           // Actionable commentary
+  strengthsFound         String?           // JSON array
+  weaknessesFound        String?           // JSON array
+  evaluatedAt            DateTime?
+
+  profile                LearnerProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  project                Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt              DateTime          @default(now())
+}
+
+model Assessment {
+  id                     String            @id @default(uuid())
+  title                  String
+  slug                   String            @unique
+  description            String
+  targetSkillId          String?
+  difficulty             String            // "BEGINNER", "INTERMEDIATE", "ADVANCED"
+  passingScore           Float             @default(70.0)
+  timeLimitMinutes       Int               @default(15)
+
+  questions              Question[]
+  attempts               AssessmentAttempt[]
+  pathSteps              LearningPathStep[]
+}
+
+model Question {
+  id                     String            @id @default(uuid())
+  assessmentId           String
+  skillId                String
+  type                   String            // "MCQ", "CODING", "SCENARIO", "SHORT_ANSWER"
+  difficulty             String            // "BEGINNER", "INTERMEDIATE", "ADVANCED"
+  prompt                 String
+  options                String?           // JSON array for MCQs
+  correctAnswer          String
+  explanation            String
+  codeSnippet            String?
+  points                 Int               @default(10)
+
+  assessment             Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  skill                  Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+}
+
+model AssessmentAttempt {
+  id                     String            @id @default(uuid())
+  profileId              String
+  assessmentId           String
+  score                  Float             // 0 to 100
+  passed                 Boolean
+  userAnswers            String            // JSON records of user selected answers
+  itemResults            String            // JSON item-by-item breakdown
+  aiAnalysis             String?           // Diagnostic summary of identified weaknesses & strengths
+  createdAt              DateTime          @default(now())
+
+  profile                LearnerProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  assessment             Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+model LearningPath {
+  id                     String            @id @default(uuid())
+  profileId              String
+  title                  String
+  strategy               String            // "FAST_TRACK", "BALANCED", "PROJECT_FIRST", etc.
+  totalWeeks             Int
+  estimatedTotalHours    Int
+  status                 String            @default("ACTIVE") // "ACTIVE", "ARCHIVED", "SIMULATED"
+  version                Int               @default(1)
+  changeLog              String?           // JSON history of why the path was adapted / replanned
+  
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  profile                LearnerProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  steps                  LearningPathStep[]
+}
+
+model LearningPathStep {
+  id                     String            @id @default(uuid())
+  pathId                 String
+  skillId                String
+  resourceId             String?
+  projectId              String?
+  assessmentId           String?
+  
+  stepType               String            // "RESOURCE", "PROJECT", "ASSESSMENT", "MILESTONE"
+  weekNumber             Int
+  orderIndex             Int
+  title                  String
+  description            String
+  estimatedMinutes       Int
+  status                 String            @default("LOCKED") // "LOCKED", "AVAILABLE", "IN_PROGRESS", "COMPLETED", "SKIPPED"
+  
+  // Explainability
+  recommendationReason   String            // "Why this?"
+  timingReason           String            // "Why now?"
+  alternativeReason      String?           // "Why not X?"
+  scoringBreakdown       String?           // JSON 8-factor score details
+  
+  completedAt            DateTime?
+  
+  path                   LearningPath      @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  skill                  Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  resource               LearningResource? @relation(fields: [resourceId], references: [id], onDelete: SetNull)
+  project                Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  assessment             Assessment?       @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
+}
+
+model RecommendationFeedback {
+  id                     String            @id @default(uuid())
+  userId                 String
+  resourceId             String
+  isHelpful              Boolean
+  perceivedDifficulty    String?           // "TOO_EASY", "JUST_RIGHT", "DIFFICULT", "TOO_DIFFICULT"
+  comments               String?
+  createdAt              DateTime          @default(now())
+
+  user                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource               LearningResource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id                     String            @id @default(uuid())
+  userId                 String
+  contextType            String            @default("ONBOARDING") // "ONBOARDING", "COPILOT", "ROADMAP_ASSIST"
+  title                  String            @default("Session")
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  user                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages               Message[]
+}
+
+model Message {
+  id                     String            @id @default(uuid())
+  conversationId         String
+  role                   String            // "USER", "ASSISTANT", "SYSTEM"
+  content                String
+  extractedData          String?           // JSON structured metadata extracted by AI
+  createdAt              DateTime          @default(now())
+
+  conversation           Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model LearningSession {
+  id                     String            @id @default(uuid())
+  userId                 String
+  durationMinutes        Int
+  skillsStudied          String            // JSON list of skill IDs
+  startedAt              DateTime          @default(now())
+  endedAt                DateTime?
+
+  user                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id                     String            @id @default(uuid())
+  profileId              String
+  type                   String            // "PREREQ_UNLOCKED", "REPLAN_TRIGGERED", "MILESTONE_REACHED", "VELOCITY_ALERT"
+  title                  String
+  message                String
+  read                   Boolean           @default(false)
+  actionUrl              String?
+  createdAt              DateTime          @default(now())
+
+  profile                LearnerProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id                     String            @id @default(uuid())
+  userId                 String?
+  action                 String
+  entityType             String
+  entityId               String?
+  metadata               String?
+  createdAt              DateTime          @default(now())
+
+  user                   User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
