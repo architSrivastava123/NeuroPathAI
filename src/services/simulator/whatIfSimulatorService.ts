@@ -42,17 +42,20 @@ export class WhatIfSimulatorService {
       }
     }
 
+    // Apply nonlinear cognitive fatigue penalty if weekly hours exceed healthy limits (>20 hrs/wk)
+    const efficiencyFactor = weeklyHours > 30 ? 0.78 : weeklyHours > 20 ? 0.88 : 1.0;
+    const effectiveWeeklyHours = Math.max(1, weeklyHours * efficiencyFactor);
     const simulatedPlan = PathOptimizerService.generateRoadmap(virtualTwin);
     const totalRequiredHours = simulatedPlan.estimatedTotalHours;
-    const simulatedWeeks = Math.max(1, Math.ceil(totalRequiredHours / (weeklyHours || 1)));
+    const simulatedWeeks = Math.max(1, Math.ceil(totalRequiredHours / effectiveWeeklyHours));
 
-    // Risk Analysis
+    // Risk & Cognitive Load Analysis
     const riskAnalysis: string[] = [];
     let feasibilityScore = 90;
     let riskLevel: "LOW" | "MODERATE" | "HIGH" | "UNREALISTIC" = "LOW";
 
     if (weeklyHours > 25) {
-      riskAnalysis.push("High weekly workload (>25 hrs/wk) significantly increases cognitive fatigue and drop-off risk.");
+      riskAnalysis.push(`High weekly workload (${weeklyHours} hrs/wk) incurs a ${(100 - efficiencyFactor * 100).toFixed(0)}% retention penalty due to cognitive fatigue.`);
       feasibilityScore -= 25;
     }
 
