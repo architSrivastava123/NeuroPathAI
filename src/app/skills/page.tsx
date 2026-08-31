@@ -48,9 +48,18 @@ export default function SkillsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredSkills = selectedCategory === "ALL"
-    ? skills
-    : skills.filter(s => s.category === selectedCategory);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+
+  const filteredSkills = skills.filter((s) => {
+    const matchesCategory = selectedCategory === "ALL" || s.category === selectedCategory;
+    const matchesStatus = selectedStatus === "ALL" || s.userState.status === selectedStatus;
+    const matchesSearch = !searchQuery.trim() ||
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.category.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesStatus && matchesSearch;
+  });
 
   const getStatusBadge = (status: StepStatus) => {
     switch (status) {
@@ -102,31 +111,70 @@ export default function SkillsPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <button
-          onClick={() => setSelectedCategory("ALL")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-            selectedCategory === "ALL"
-              ? "bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20"
-              : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
-          }`}
-        >
-          All Competencies ({skills.length})
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-              selectedCategory === cat
-                ? "bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20"
-                : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Search & Filter Toolbar */}
+      <div className="space-y-3 p-4 rounded-2xl glass-panel">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative flex-1 w-full">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search skill nodes by keyword (e.g., Python, Attention, Vector, RAG)..."
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
+            />
+          </div>
+
+          <div className="text-xs text-slate-400 font-medium shrink-0">
+            Showing <strong className="text-teal-300">{filteredSkills.length}</strong> of {skills.length} nodes
+          </div>
+        </div>
+
+        {/* Categories & Status Filters */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-[11px] text-slate-400 font-bold uppercase mr-1">Category:</span>
+            <button
+              onClick={() => setSelectedCategory("ALL")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                selectedCategory === "ALL"
+                  ? "bg-teal-500 text-slate-950 shadow-sm"
+                  : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
+              }`}
+            >
+              All
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                  selectedCategory === cat
+                    ? "bg-teal-500 text-slate-950 shadow-sm"
+                    : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-[11px] text-slate-400 font-bold uppercase mr-1">Status:</span>
+            {["ALL", "MASTERED", "IN_PROGRESS", "AVAILABLE", "LOCKED"].map((st) => (
+              <button
+                key={st}
+                onClick={() => setSelectedStatus(st)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                  selectedStatus === st
+                    ? "bg-indigo-500 text-white shadow-sm"
+                    : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800"
+                }`}
+              >
+                {st === "ALL" ? "All Statuses" : st.replace(/_/g, " ")}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Grid of Nodes + Detail Drawer */}
