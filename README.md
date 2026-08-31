@@ -177,6 +177,32 @@ src/
 
 ### Installation
 
+## 🌐 API Route Specification
+
+| Endpoint | Method | Purpose |
+| :--- | :--- | :--- |
+| `/api/onboarding/chat` | `POST` | Multi-turn conversational goal & background extraction |
+| `/api/onboarding/complete` | `POST` | Digital Twin synthesis & initial roadmap compilation |
+| `/api/dashboard` | `GET` | Aggregated command center analytics, radar, and next best action |
+| `/api/roadmap` | `GET` / `PATCH` | Retrieve active roadmap trajectory or update step status |
+| `/api/roadmap/replan` | `POST` | Trigger adaptive graph replanning & schedule rebalance |
+| `/api/roadmap/simulate` | `POST` | Non-destructive What-If scenario capacity simulation |
+| `/api/skills` | `GET` | Normalized DAG taxonomy with prerequisite dependencies |
+| `/api/resources` | `GET` | Dense vector catalog search & 8-factor ranking scores |
+| `/api/assessments` | `GET` / `POST` | Diagnostic quiz retrieval & mastery validation |
+| `/api/projects` | `GET` / `POST` | Practical milestone projects & rubric evaluation |
+| `/api/ai/copilot` | `POST` | Always-available contextual learning assistant |
+
+---
+
+## ⚡ Getting Started
+
+### Prerequisites
+* Node.js 18+
+* npm, pnpm, or yarn
+
+### Installation
+
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/architSrivastava123/NeuroPathAI.git
