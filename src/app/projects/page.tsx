@@ -181,30 +181,45 @@ async def login(form_data: OAuth2PasswordBearer = Depends(), db: AsyncSession = 
                   </div>
 
                   {/* Rubric Breakdown */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
-                    <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <p className="text-[10px] text-slate-400">Architecture</p>
-                      <p className="text-base font-bold text-teal-400">{evaluation.breakdown.architecture}%</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                    <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                      <p className="text-[10px] text-slate-400 uppercase font-semibold">Arch</p>
+                      <p className="text-base font-black text-indigo-300">{evaluation.breakdown.architecture}%</p>
+                      <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${evaluation.breakdown.architecture}%` }} />
+                      </div>
                     </div>
-                    <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <p className="text-[10px] text-slate-400">Code Quality</p>
-                      <p className="text-base font-bold text-teal-400">{evaluation.breakdown.codeQuality}%</p>
+                    <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                      <p className="text-[10px] text-slate-400 uppercase font-semibold">Code</p>
+                      <p className="text-base font-black text-teal-300">{evaluation.breakdown.codeQuality}%</p>
+                      <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-teal-400 rounded-full" style={{ width: `${evaluation.breakdown.codeQuality}%` }} />
+                      </div>
                     </div>
-                    <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <p className="text-[10px] text-slate-400">Testing</p>
-                      <p className="text-base font-bold text-teal-400">{evaluation.breakdown.testing}%</p>
+                    <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                      <p className="text-[10px] text-slate-400 uppercase font-semibold">Testing</p>
+                      <p className="text-base font-black text-emerald-300">{evaluation.breakdown.testing}%</p>
+                      <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${evaluation.breakdown.testing}%` }} />
+                      </div>
                     </div>
-                    <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <p className="text-[10px] text-slate-400">Security</p>
-                      <p className="text-base font-bold text-teal-400">{evaluation.breakdown.security}%</p>
+                    <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1">
+                      <p className="text-[10px] text-slate-400 uppercase font-semibold">Security</p>
+                      <p className="text-base font-black text-amber-300">{evaluation.breakdown.security}%</p>
+                      <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-400 rounded-full" style={{ width: `${evaluation.breakdown.security}%` }} />
+                      </div>
                     </div>
-                    <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800">
-                      <p className="text-[10px] text-slate-400">Docs</p>
-                      <p className="text-base font-bold text-teal-400">{evaluation.breakdown.documentation}%</p>
+                    <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1 col-span-2 sm:col-span-1">
+                      <p className="text-[10px] text-slate-400 uppercase font-semibold">Docs</p>
+                      <p className="text-base font-black text-cyan-300">{evaluation.breakdown.documentation}%</p>
+                      <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${evaluation.breakdown.documentation}%` }} />
+                      </div>
                     </div>
                   </div>
 
-                  <p className="text-xs leading-relaxed text-slate-200">{evaluation.commentary}</p>
+                  <p className="text-xs leading-relaxed text-slate-200 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">{evaluation.commentary}</p>
                 </div>
               )}
 
