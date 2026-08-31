@@ -47,6 +47,7 @@ export default function OnboardingPage() {
   const sampleGoals = [
     "I want to become a production-level AI Engineer in 6 months. I know Python, basic ML and Git. I have 10 hours/week.",
     "I want to build full-stack AI applications with Next.js and LLMs. I have 15 hours/week and prefer project-first learning.",
+    "I want to become an AI Agents & RAG Specialist. I have 12 hours/week and want deep mastery of vector retrieval and agent orchestration.",
     "I am a backend engineer with SQL and Docker experience wanting to master MLOps and LLM serving in 4 months.",
   ];
 
