@@ -174,12 +174,28 @@ export default function AssessmentsPage() {
               {result.changesSummary?.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-1">
                   {result.changesSummary.map((c: string, idx: number) => (
-                    <span key={idx} className="px-2.5 py-1 rounded-md bg-slate-900/80 text-[10px] font-semibold">
+                    <span key={idx} className="px-2.5 py-1 rounded-md bg-slate-900/80 text-[10px] font-semibold text-emerald-300 border border-emerald-500/30">
                       ✓ {c}
                     </span>
                   ))}
                 </div>
               )}
+
+              <div className="flex items-center gap-3 pt-2">
+                <a
+                  href="/roadmap"
+                  className="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-md shadow-teal-500/20 transition-all inline-flex items-center gap-1.5"
+                >
+                  <span>View Updated Roadmap</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+                <a
+                  href="/dashboard"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-semibold transition-colors"
+                >
+                  Return to Dashboard
+                </a>
+              </div>
             </div>
           )}
 
