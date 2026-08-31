@@ -72,13 +72,14 @@ export default function Navbar() {
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
             <Flame className="h-4 w-4 text-amber-400 fill-amber-400 animate-pulse" />
             <span className="font-semibold text-amber-300">12 Day Streak</span>
+            <span className="text-[10px] text-teal-400 font-bold ml-1 bg-teal-500/10 px-1.5 py-0.5 rounded">94% Consistency</span>
           </div>
 
           <Link
             href="/onboarding"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-500/20 to-indigo-600/20 hover:from-teal-500/30 hover:to-indigo-600/30 text-teal-200 border border-teal-500/30 text-xs font-semibold transition-all"
           >
-            <Bot className="h-3.5 w-3.5" />
+            <Bot className="h-3.5 w-3.5 text-teal-400" />
             <span>AI Onboarding</span>
           </Link>
         </div>
